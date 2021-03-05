@@ -14,9 +14,6 @@ using System.Windows.Shapes;
 
 namespace howto_wpf_draw_polygon
 {
-    /// <summary>
-    /// Interaction logic for Window1.xaml
-    /// </summary>
     public partial class Window1 : Window
     {
         public Window1()
@@ -25,7 +22,15 @@ namespace howto_wpf_draw_polygon
         }
 
         private Polyline NewPolyline = null;
+        //private Polygon new_polygon = null;
 
+        private Polygon getPolygon() {
+            Polygon polygon = new Polygon();
+            polygon.Stroke = Brushes.Blue;
+            polygon.StrokeThickness = 0.5;
+            return polygon;
+        }
+        
         private void canDraw_MouseDown(object sender, MouseButtonEventArgs e)
         {
             // See which button was pressed.
@@ -34,22 +39,13 @@ namespace howto_wpf_draw_polygon
                 // See if we are drawing a new polygon.
                 if (NewPolyline != null)
                 {
-                    if (NewPolyline.Points.Count > 3)
+                    NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 2);
+                    if (NewPolyline.Points.Count > 2)
                     {
-                        // Remove the last point.
-                        NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 1);
-
-                        // Convert the new polyline into a polygon.
-                        Polygon new_polygon = new Polygon();
-                        new_polygon.Stroke = Brushes.Blue;
-                        new_polygon.StrokeThickness = 2;
-                        new_polygon.Points = NewPolyline.Points;
-                        canDraw.Children.Add(new_polygon);
+                        NewPolyline.Points[NewPolyline.Points.Count - 1] = NewPolyline.Points[NewPolyline.Points.Count - 2];
                     }
-                    canDraw.Children.Remove(NewPolyline);
-                    NewPolyline = null;
                 }
-                return;
+                //return;
             }
 
             // If we don't have a new polygon, start one.
@@ -67,13 +63,38 @@ namespace howto_wpf_draw_polygon
             }
 
             // Add a point to the new polygon.
-            NewPolyline.Points.Add(e.GetPosition(canDraw));
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                
+                if (NewPolyline.Points.Count >= 2)
+                {
+                    NewPolyline.Points[NewPolyline.Points.Count - 1] = e.GetPosition(canDraw);
+                    NewPolyline.Points.Add(NewPolyline.Points[0]);
+                }
+                else
+                    NewPolyline.Points.Add(e.GetPosition(canDraw));
+            }
+                
         }
 
         private void canDraw_MouseMove(object sender, MouseEventArgs e)
         {
             if (NewPolyline == null) return;
-            NewPolyline.Points[NewPolyline.Points.Count - 1] = e.GetPosition(canDraw);
+            if (NewPolyline.Points.Count > 2)
+            {
+                NewPolyline.Points[NewPolyline.Points.Count - 2] = e.GetPosition(canDraw);
+            }
+            else
+            {
+                NewPolyline.Points[NewPolyline.Points.Count - 1] = e.GetPosition(canDraw);
+            }
+            //NewPolyline.Points.Add(NewPolyline.Points[0]);
+            //canDraw.Children.Add(NewPolyline);
+            // Convert the new polyline into a polygon.
+            Polygon polygon = getPolygon();
+            
+            //polygon.Points = NewPolyline.Points;
+            canDraw.Children.Add(polygon);
         }
     }
 }

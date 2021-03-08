@@ -22,15 +22,7 @@ namespace howto_wpf_draw_polygon
         }
 
         private Polyline NewPolyline = null;
-        //private Polygon new_polygon = null;
 
-        private Polygon getPolygon() {
-            Polygon polygon = new Polygon();
-            polygon.Stroke = Brushes.Blue;
-            polygon.StrokeThickness = 0.5;
-            return polygon;
-        }
-        
         private void canDraw_MouseDown(object sender, MouseButtonEventArgs e)
         {
             // See which button was pressed.
@@ -39,11 +31,21 @@ namespace howto_wpf_draw_polygon
                 // See if we are drawing a new polygon.
                 if (NewPolyline != null)
                 {
-                    NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 2);
-                    if (NewPolyline.Points.Count > 2)
+                    // POINTS = [A, B, C, D, A] => POINTS = [A, B, C, A]
+                    if (NewPolyline.Points.Count > 4)
                     {
-                        NewPolyline.Points[NewPolyline.Points.Count - 1] = NewPolyline.Points[NewPolyline.Points.Count - 2];
+                        NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 2);      // Creating the loop
+                        NewPolyline.Points[NewPolyline.Points.Count - 2] = e.GetPosition(canDraw); // Refresh the dash polygon  
+                        return;
                     }
+                    // POINTS = [A, B, C, A] => POINTS = [A, B]
+                    if (NewPolyline.Points.Count == 4)
+                    {
+                        NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 1);
+                    }
+                    // POINTS = [A, B] => POINTS = [A]
+                    // POINTS = [A] => POINTS = 0
+                    NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 1);
                 }
                 //return;
             }
@@ -65,21 +67,25 @@ namespace howto_wpf_draw_polygon
             // Add a point to the new polygon.
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                
-                if (NewPolyline.Points.Count >= 2)
+
+                if (NewPolyline.Points.Count > 2)
                 {
                     NewPolyline.Points[NewPolyline.Points.Count - 1] = e.GetPosition(canDraw);
+                    NewPolyline.Points.Add(NewPolyline.Points[0]);
+                }
+                else if (NewPolyline.Points.Count == 2)
+                {
+                    NewPolyline.Points.Add(e.GetPosition(canDraw));
                     NewPolyline.Points.Add(NewPolyline.Points[0]);
                 }
                 else
                     NewPolyline.Points.Add(e.GetPosition(canDraw));
             }
-                
         }
 
         private void canDraw_MouseMove(object sender, MouseEventArgs e)
         {
-            if (NewPolyline == null) return;
+            if (NewPolyline == null || NewPolyline.Points.Count == 0) return;
             if (NewPolyline.Points.Count > 2)
             {
                 NewPolyline.Points[NewPolyline.Points.Count - 2] = e.GetPosition(canDraw);
@@ -88,13 +94,41 @@ namespace howto_wpf_draw_polygon
             {
                 NewPolyline.Points[NewPolyline.Points.Count - 1] = e.GetPosition(canDraw);
             }
-            //NewPolyline.Points.Add(NewPolyline.Points[0]);
-            //canDraw.Children.Add(NewPolyline);
-            // Convert the new polyline into a polygon.
-            Polygon polygon = getPolygon();
+            //Console.WriteLine(String.Format("X:{0}  Y:{1}", e.GetPosition(canDraw).X, e.GetPosition(Owner).Y));
+        }
+        private void canDraw_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (NewPolyline == null || NewPolyline.Points.Count == 0) return;
+            NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 1);
+            NewPolyline.Points.RemoveAt(NewPolyline.Points.Count - 1);
+            Poly poly = new Poly();
+            poly.setPolygon();
+            poly.setPoints(NewPolyline.Points);
+            canDraw.Children.Add(poly.GetPolygon());
+            Console.WriteLine(NewPolyline.Points.Count());
+            canDraw.Children.Remove(NewPolyline);
+            NewPolyline = null;
             
-            //polygon.Points = NewPolyline.Points;
-            canDraw.Children.Add(polygon);
+        }
+    }
+    class Poly
+    {
+        private Polygon polygon = null;
+
+        public void setPolygon()
+        {
+            polygon = new Polygon();
+            polygon.Stroke = Brushes.Blue;
+            polygon.StrokeThickness = 2;
+        }
+        public void setPoints(PointCollection points)
+        {
+            this.polygon.Points = points;
+            
+        }
+        public Polygon GetPolygon()
+        {
+            return polygon;
         }
     }
 }

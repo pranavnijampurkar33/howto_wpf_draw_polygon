@@ -5,7 +5,7 @@
     <Grid>
         <Border Margin="10" BorderBrush="Gray" BorderThickness="1">
             <Canvas Name="canDraw" Cursor="Cross"
-                MouseDown="canDraw_MouseDown" MouseMove="canDraw_MouseMove">
+                MouseDown="canDraw_MouseDown" MouseMove="canDraw_MouseMove" MouseLeave="canDraw_MouseLeave">
                 <Canvas.Background>
                     <ImageBrush ImageSource="IMG_20200919_114747.jpg"/>
                 </Canvas.Background>
